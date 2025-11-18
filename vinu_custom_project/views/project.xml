@@ -8,11 +8,16 @@
 
             <!-- Add button after the project name column -->
             <xpath expr="//list/field[@name='partner_id']" position="after">
+                    <button name="action_view_product_list"
+                            string="View (Product List)"
+                            type="object"
+                            class="btn btn-link"/>
                     <button name="action_view_payment_schedule"
                             string="View (Payment Schedules)"
                             type="object"
                             class="btn btn-link"/>
                     <field name="cost"/>
+                    <field name="stage_id"/>
             </xpath>
 
         </field>

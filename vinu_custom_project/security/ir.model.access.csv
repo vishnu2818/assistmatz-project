@@ -1,3 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_daily_update_user,daily.update user,model_daily_update,base.group_user,1,1,1,1
 access_payment_schedule_user,payment.schedule user,model_payment_schedule,base.group_user,1,1,1,1
+access_project_product_line_user,project.product.line user,vinu_custom_project.model_project_product_line,base.group_user,1,1,1,1
