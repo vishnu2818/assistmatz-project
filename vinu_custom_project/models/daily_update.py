@@ -20,6 +20,15 @@ class DailyUpdate(models.Model):
         'attachment_id',  # column linking to ir.attachment
         string="Attachments"
     )
+    status = fields.Selection(
+        selection=[
+            ('pending', 'Pending'),
+            ('completed', 'Completed')
+        ],
+        string="Status",
+        default='pending',
+    )
+
     allow_edit_after_edit = fields.Boolean(
         string="Allow edit",
         compute="_compute_allow_edit_after_create",

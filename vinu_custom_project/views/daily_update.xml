@@ -9,6 +9,7 @@
                 <field name="employee_id" readonly="allow_edit_after_edit == False"/>
                 <field name="description"/>
                 <field name="attachment_ids" widget="many2many_binary"/>
+                <field name="status"/>
                 <field name="allow_edit_after_edit" column_invisible="True"/>
             </list>
         </field>
@@ -26,6 +27,7 @@
                         <field name="employee_id" readonly="allow_edit_after_edit == False"/>
                         <field name="description"/>
                         <field name="attachment_ids" widget="many2many_binary"/>
+                        <field name="status"/>
                         <field name="allow_edit_after_edit" invisible="1"/>
                     </group>
                 </sheet>
