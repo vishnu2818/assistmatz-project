@@ -33,3 +33,5 @@ class ProjectProject(models.Model):
         action["domain"] = [("project_id", "=", self.id)]
         action["context"] = {"default_project_id": self.id}
         return action
+
+    cost = fields.Float("Cost")

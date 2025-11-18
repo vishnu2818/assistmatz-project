@@ -1,21 +1,22 @@
 <odoo>
 
-<!--    <record id="project_project_list_inherit_payment_button" model="ir.ui.view">-->
-<!--        <field name="name">project.project.list.inherit.payment.button</field>-->
-<!--        <field name="model">project.project</field>-->
-<!--        <field name="inherit_id" ref="project.view_project"/>-->
-<!--        <field name="arch" type="xml">-->
+    <record id="project_project_list_inherit_payment_button" model="ir.ui.view">
+        <field name="name">project.project.list.inherit.payment.button</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.view_project"/>
+        <field name="arch" type="xml">
 
-<!--            &lt;!&ndash; Add button after the project name column &ndash;&gt;-->
-<!--            <xpath expr="//list/field[@name='name']" position="after">-->
-<!--                    <button name="action_view_payment_schedule"-->
-<!--                            string="View (Payment Schedules)"-->
-<!--                            type="object"-->
-<!--                            class="btn btn-link"/>-->
-<!--            </xpath>-->
+            <!-- Add button after the project name column -->
+            <xpath expr="//list/field[@name='partner_id']" position="after">
+                    <button name="action_view_payment_schedule"
+                            string="View (Payment Schedules)"
+                            type="object"
+                            class="btn btn-link"/>
+                    <field name="cost"/>
+            </xpath>
 
-<!--        </field>-->
-<!--    </record>-->
+        </field>
+    </record>
 
     <record id="vcp_project_form_inherit_assigned_employees" model="ir.ui.view">
         <field name="name">project.project.form.inherit.assigned.employees</field>
@@ -34,10 +35,10 @@
                     <field name="daily_update_ids" widget="one2many_list">
                     </field>
                 </page>
-<!--                <page name="payment_schedule" string="Payment Schedule">-->
-<!--                    <field name="payment_schedule_ids" widget="one2many_list">-->
-<!--                    </field>-->
-<!--                </page>-->
+                <page name="payment_schedule" string="Payment Schedule">
+                    <field name="payment_schedule_ids" widget="one2many_list">
+                    </field>
+                </page>
             </xpath>
 
         </field>
