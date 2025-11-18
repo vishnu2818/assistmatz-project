@@ -17,7 +17,7 @@
                             type="object"
                             class="btn btn-link"/>
                     <field name="cost"/>
-                    <field name="stage_id"/>
+<!--                    <field name="stage_id"/>-->
             </xpath>
 
         </field>
