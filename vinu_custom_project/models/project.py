@@ -32,7 +32,6 @@ class ProjectProject(models.Model):
         action = self.env.ref("vinu_custom_project.action_payment_schedule_popup").read()[0]
         action["domain"] = [("project_id", "=", self.id)]
         action["context"] = {"default_project_id": self.id}
-
         return action
 
     product_line_ids = fields.One2many(
@@ -103,14 +102,20 @@ class ProjectProject(models.Model):
             if line.order_id:
                 info["quotation_ids"].add(line.order_id.id)
 
-        # 4) Create project product lines
+        # 👉 4) Create project product lines WITH SEQUENCE
+        sequence = 1  # start SI:NO from 1
+
         for product_id, info in product_map.items():
             rec = ProductLine.create({
                 "project_id": self.id,
                 "product_id": product_id,
                 "quantity": info["qty"],
                 "cost": info["cost"],
+                "sequence": sequence,  # ★ add sequence here
             })
+
+            # increment sequence
+            sequence += 1
             if info["quotation_ids"]:
                 rec.quotation_ids = [(6, 0, list(info["quotation_ids"]))]
 

@@ -12,6 +12,7 @@
                             string="View (Product List)"
                             type="object"
                             class="btn btn-link"/>
+
                     <button name="action_view_payment_schedule"
                             string="View (Payment Schedules)"
                             type="object"

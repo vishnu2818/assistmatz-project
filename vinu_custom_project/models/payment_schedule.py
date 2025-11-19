@@ -17,3 +17,8 @@ class PaymentSchedule(models.Model):
         default=fields.Date.context_today
     )
     amount = fields.Float(string="Amount")
+    due_date = fields.Date(string="Due Date")
+    status = fields.Selection([
+        ('not_paid', 'Not Paid'),
+        ('paid', 'Paid'),
+    ], string="Status", default='not_paid', required=True)

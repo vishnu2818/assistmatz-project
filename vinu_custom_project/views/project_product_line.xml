@@ -5,11 +5,12 @@
         <field name="name">project.product.line.list</field>
         <field name="model">project.product.line</field>
         <field name="arch" type="xml">
-            <list>
+            <list create="false">
+<!--                <field name="quotation_ids" widget="many2many_tags"/>-->
+                <field name="sequence"/>
                 <field name="product_id"/>
-                <field name="quotation_ids" widget="many2many_tags"/>
                 <field name="quantity"/>
-                <field name="project_id"/>
+<!--                <field name="project_id"/>-->
             </list>
         </field>
     </record>
@@ -19,10 +20,11 @@
         <field name="name">project.product.line.form</field>
         <field name="model">project.product.line</field>
         <field name="arch" type="xml">
-            <form string="Project Product Line">
+            <form string="Project Product Line" create="false">
                 <sheet>
                     <group>
-                        <field name="project_id" readonly="0"/>
+<!--                        <field name="project_id" readonly="0"/>-->
+<!--                        <field name="sequence" readonly="0"/>-->
                         <field name="product_id" readonly="0"/>
                         <field name="quantity" readonly="0"/>
                         <field name="quotation_ids" readonly="0" widget="many2many_tags"/>
@@ -41,6 +43,8 @@
         <field name="target">new</field>
         <field name="domain">[('project_id', '=', active_id)]</field>
         <field name="context">{'default_project_id': active_id}</field>
+        <!-- disable search in the popup and set default project -->
+        <field name="search_view_id" eval="False"/>
     </record>
 
 </odoo>

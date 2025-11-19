@@ -4,10 +4,13 @@
         <field name="name">payment.schedule.list</field>
         <field name="model">payment.schedule</field>
         <field name="arch" type="xml">
-            <list editable="bottom">
+            <list editable="bottom" decoration-success="status == 'paid'"
+                  decoration-danger="status == 'not_paid'">
                 <field name="payment_date"/>
+                <field name="due_date"/>
                 <field name="payment_description"/>
                 <field name="amount"/>
+                <field name="status"/>
             </list>
         </field>
     </record>
@@ -20,7 +23,9 @@
                 <sheet>
                     <group>
                         <field name="payment_date"/>
+                        <field name="due_date"/>
                         <field name="amount"/>
+                        <field name="status"/>
                     </group>
                     <group>
                         <field name="payment_description"/>
