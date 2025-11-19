@@ -208,197 +208,140 @@ class CrmLead(models.Model):
         return super(CrmLead, self).write(vals)
 
 
-    def _check_required_fields_on_stage_change(self):
-        """
-        Checks mandatory fields before moving out of 'New' stage.
-        Required fields: partner_id, email_from, phone, x_studio_job_type, 
-        x_studio_project, date_deadline.
-        """
-        self = self.ensure_one()
-        missing = []
-
-        if not self.partner_id:
-            missing.append(_('Customer'))
-        if not self.email_from:
-            missing.append(_('Email'))
-        if not self.phone:
-            missing.append(_('Phone'))
-        if not self.x_studio_job_type:
-            missing.append(_('Job Type')) 
-        if not self.x_studio_project:
-            missing.append(_('Project'))
-        if not self.date_deadline:
-            missing.append(_('Forecast Date'))
-
-        return missing
-
-    
     def write(self, vals):
-        """
-        Overrides the write method to enforce custom stage transition and 
-        field validation rules, including automatic stage changes.
-        """
-        
         user = self.env.user
-        is_admin = user.has_group('base.group_system') 
+        is_admin = user.has_group('base.group_system')
         LeadStage = self.env['crm.stage']
         SaleOrder = self.env['sale.order']
-        
+    
         for lead in self:
             old_stage_name = lead.stage_id.name
             old_stage_sequence = lead.stage_id.sequence
-
-            # --- PRE-WRITE AUTOMATION AND VALIDATION ---
-
-            # 1. Automatic Move from 'New' -> 'Quote Preparation'
-            # Check if stage is not being explicitly changed AND current stage is 'New'
-            if 'stage_id' not in vals and old_stage_name == 'New':
-                # Check if required fields are filled on the current record or will be filled by 'vals'
-                missing_fields = lead._check_required_fields_on_stage_change()
-                is_ready_to_move = not missing_fields
-                
-                # Check if the incoming 'vals' fills the missing fields
-                if missing_fields:
-                    is_ready_to_move = True
-                    for field_name in missing_fields:
-                        # Convert human-readable name back to technical name if possible, 
-                        # or rely on the caller to ensure field names match keys in vals
-                        
-                        # Simplified check: assume if a missing field is NOT in vals, it remains missing
-                        # This part might need fine-tuning if field names in missing list are not keys in vals.
-                        tech_name = next((key for key, field in self._fields.items() if field.string == field_name), field_name)
-                        if tech_name not in vals:
-                            is_ready_to_move = False
-                            break
-                            
-                if is_ready_to_move:
-                    quote_prep_stage = LeadStage.search([('name', '=', 'Quote Preparation')], limit=1)
-                    if quote_prep_stage:
-                        vals['stage_id'] = quote_prep_stage.id
-
-
-            # 2. Check Lost/Archiving Logic (Automation)
-            if 'active' in vals and not vals['active']:
-                # Archiving (active=False) implies moving to Lost
-                quotation = SaleOrder.search([('opportunity_id', '=', lead.id)], limit=1)
-                if not quotation:
-                    raise ValidationError("You cannot manually move to the 'Lost' stage when the Lead has no Quotation.")
-                
-                # Automatically set stage to 'Lost' when archiving/setting active=False
-                lost_stage = LeadStage.search([('name', '=', 'Lost')], limit=1)
-                if lost_stage:
-                    vals['stage_id'] = lost_stage.id
-            
-
-            # 3. Check Forecast Date Validation (Standalone Validation)
-            if 'date_deadline' in vals and vals['date_deadline']:
-                date_str = vals['date_deadline']
-                new_date = fields.Date.from_string(date_str) if isinstance(date_str, str) else date_str
-                
-                if new_date and new_date < fields.Date.today():
-                    raise ValidationError("Forecast date cannot be in the past.")
-
-            # --- STAGE CHANGE VALIDATIONS (MANDATORY RULES) ---
-            
-            # This block runs if 'stage_id' was changed, either manually OR by the automation above.
+    
+            # -------------------------------------------------------------
+            # VALIDATIONS WHEN MANUALLY CHANGING STAGE
+            # -------------------------------------------------------------
             if 'stage_id' in vals:
                 new_stage = LeadStage.browse(vals['stage_id'])
                 new_stage_sequence = new_stage.sequence
-                quotation = SaleOrder.search([('opportunity_id', '=', lead.id)], limit=1) if new_stage.name != 'New' else None
-                
-                _logger.warning(f"This is old_stage_name {old_stage_name} and new stage {new_stage.name} ")
-
+    
+                quotation = None
+                if new_stage.name != 'New':
+                    quotation = SaleOrder.search([('opportunity_id', '=', lead.id)], limit=1)
+    
                 if not is_admin:
-                    # Backward movement restriction
+    
+                    # Restrict backward movement
                     if new_stage_sequence < old_stage_sequence:
-                        allowed_backward = (
-                            old_stage_name == 'Hold' and 
-                            new_stage.name in ['Expecting (60%)', 'Commit (90%)', 'Quote Submitted']
-                        )
-                        if not allowed_backward:
-                            raise ValidationError("You cannot move to an Backward stage.")
-
-                    # Quote Submitted
+                        if not (old_stage_name == 'Hold' and new_stage.name in ['Expecting (60%)', 'Commit (90%)', 'Quote Submitted']):
+                            raise ValidationError("You cannot move to a backward stage.")
+    
+                    # Quote Submitted validations
                     if new_stage.name == 'Quote Submitted':
                         if old_stage_name != 'Quote Completed' or not quotation or quotation.state != 'sent':
-                            raise ValidationError("Only records in 'Quote Completed' with a valid 'sent' quotation can move to 'Quote Submitted'.")
-
-                    # Quote Completed
+                            raise ValidationError("Only records in 'Quote Completed' with a sent quotation can move to 'Quote Submitted'.")
+    
+                    # Quote Completed validations
                     if new_stage.name == 'Quote Completed':
                         if old_stage_name != 'Quote Preparation' or not quotation:
-                            raise ValidationError("Only records in 'Quote Preparation' with a valid quotation can move to Quote Completed.")
-                        if not quotation.quote_completed: # Requires 'quote_completed' field on sale.order
-                            raise ValidationError("Please Use Quote Completed Button In Quotation for Move to Quote Completed")
-                    
-                    # Quote Preparation (only required if NOT using the automatic move from 'New' -> 'Quote Preparation' logic)
+                            raise ValidationError("Only records in Quote Preparation can move to Quote Completed.")
+                        if not quotation.quote_completed:
+                            raise ValidationError("Please use Quote Completed button inside quotation.")
+    
+                    # Quote Preparation
                     if new_stage.name == 'Quote Preparation':
                         if old_stage_name != 'New':
-                            # This check prevents manual back-moves to Quote Preparation, 
-                            # but allows the automated New->QP move.
-                            pass # The automated logic handles New -> QP move implicitly.
-
+                            raise ValidationError("Only 'New' leads can move to Quote Preparation.")
+    
                     # Advanced stages
                     if new_stage.name in ['Expecting (60%)', 'Commit (90%)', 'Won']:
                         if old_stage_name in ['Quote Completed', 'New', 'Quote Preparation']:
-                            raise ValidationError(f"Only 'Quote Submitted' records can move to '{new_stage.name}'.")
-
-                    # Hold stage entry restriction
+                            raise ValidationError(f"Only Quote Submitted leads can move to {new_stage.name}.")
+    
+                    # Hold
                     if new_stage.name == 'Hold':
                         if old_stage_name not in ['Expecting (60%)', 'Commit (90%)', 'Quote Submitted']:
-                            raise ValidationError(f"Only ['Quote Submitted' , 'Expecting (60%)', 'Commit (90%)'] records can move to '{new_stage.name}'.")
-
-                    # Quotation state requirement for Expecting/Commit/Lost
-                    if new_stage.name in ['Expecting (60%)', 'Commit (90%)','Lost' ]:
-                        if not quotation or quotation.state != 'sent':
-                            raise ValidationError( f"Only leads with a 'sent' quotation can be moved to '{new_stage.name}'.")
-                            
-                    # Hold stage exit restriction
-                    if old_stage_name == 'Hold' and new_stage.name not in ['Expecting (60%)', 'Commit (90%)', 'Quote Submitted']:
-                        raise ValidationError("From 'Hold', you can move only to 'Expecting (60%)', 'Commit (90%)', 'Quote Submitted' ")
-
-                    # Not in Scope (Lost)
+                            raise ValidationError("Only Quote Submitted / Expecting / Commit can move to Hold.")
+    
+                    # Regret (Not in Scope)
                     if new_stage.name == 'Not in Scope':
                         if old_stage_name != 'Quote Preparation':
-                             raise ValidationError("Please contact Administration. The 'Not in Scope' stage only accepts leads from the 'Quote Prepation' stage.")
-
-                    # Won stage restriction
+                            raise ValidationError("Only allowed from Quote Preparation stage.")
+    
+                    # Won cannot move back
                     if old_stage_name == 'Won' and new_stage.name != 'Won':
-                        raise ValidationError("Only Admin can move records from the 'Won' stage to another stage.")
-
-                # --- VALIDATION LOGIC FOR ALL USERS (Admin/Non-Admin) ---
-                if old_stage_name == 'New' and new_stage.name != 'New':
-                    # This only applies if the stage ID was manually set, 
-                    # but it's redundant if the automatic move succeeds. 
-                    # Keeping it for manual transitions that skip the automatic check.
-                    missing_fields = lead._check_required_fields_on_stage_change()
-                    if missing_fields:
-                        raise ValidationError(
-                            "Please fill the following fields before moving to 'Quote Preparation':\n- " + "\n- ".join(missing_fields)
-                        )
-
-                # Forecast requirement for Commit 90%
-                if new_stage.name == 'Commit (90%)':
-                    forecast_valid = vals.get('date_deadline') or lead.date_deadline
-                    if not forecast_valid:
-                        raise ValidationError("Forecast Date required to move to this stage.")
-
-                # Won stage
-                if new_stage.name == 'Won':
-                    if quotation and quotation.state == 'sale':
-                        po_date = vals.get('po_date') or lead.po_date
-                        po_ref = vals.get('po_ref') or lead.po_ref
-                        po_attachment = vals.get('po_attachment') or lead.po_attachment
-
-                        if not po_date and not po_ref and not po_attachment:
-                            raise ValidationError("Please fill at least one of the following fields before moving to 'Won': PO Date, PO Reference, or PO Attachment.")
-                    else:
-                        raise ValidationError("You connot move manually to 'Won' stage. Please use the 'Confirm' button in Quotation to move to 'Won' stage.")
-
-        # Execute the database write operation
+                        raise ValidationError("Only Admin can move records out of Won.")
+    
+                    # Forecast check for Commit 90%
+                    if new_stage.name == 'Commit (90%)':
+                        if not lead.date_deadline:
+                            raise ValidationError("Forecast Date is required.")
+    
+                    # Won stage validations
+                    if new_stage.name == 'Won':
+                        if quotation and quotation.state == 'sale':
+                            if not lead.po_date or not lead.po_ref or not lead.po_attachment:
+                                raise ValidationError("Please fill PO Date / PO Ref / PO Attachment before moving to Won.")
+                        else:
+                            raise ValidationError("You cannot manually move to Won. Confirm quotation instead.")
+    
+            # -------------------------------------------------------------
+            # MOVING TO LOST (DEACTIVATION)
+            # -------------------------------------------------------------
+            if 'active' in vals and not vals['active']:
+                quotation = SaleOrder.search([('opportunity_id', '=', lead.id)], limit=1)
+                if not quotation:
+                    raise ValidationError("Cannot move to Lost without a quotation.")
+                lost = LeadStage.search([('name', '=', 'Lost')], limit=1)
+                if lost:
+                    vals['stage_id'] = lost.id
+    
+            # -------------------------------------------------------------
+            # FORECAST DATE VALIDATION
+            # -------------------------------------------------------------
+            if 'date_deadline' in vals:
+                new_date = vals['date_deadline']
+                if isinstance(new_date, str):
+                    new_date = fields.Date.from_string(new_date)
+                if new_date < fields.Date.today():
+                    raise ValidationError("Forecast date cannot be in the past.")
+    
+            # -------------------------------------------------------------
+            # AUTO STAGE UPDATE WHEN QUOTATION IS CREATED
+            # (Triggered by New Quotation button)
+            # -------------------------------------------------------------
+            if 'sale_order_count' in vals:  # quotation created
+                missing = []
+                if not lead.expected_revenue:
+                    missing.append("Expected Revenue")
+                if not lead.date_deadline:
+                    missing.append("Forecast Date")
+    
+                if missing:
+                    raise ValidationError(
+                        "Please fill mandatory fields before creating quotation:\n- " + "\n- ".join(missing)
+                    )
+    
+                # Move to Quote Preparation automatically
+                quote_prep = LeadStage.search([('name', 'ilike', 'Quote Preparation')], limit=1)
+                if quote_prep and lead.stage_id.name == 'New':
+                    vals['stage_id'] = quote_prep.id
+    
+        # -------------------------------------------------------------
+        # SAVE RECORD
+        # -------------------------------------------------------------
         record = super().write(vals)
-
-        # --- POST-WRITE LOGIC (No Post-Write auto-stage change needed here) ---
-        
+    
+        # -------------------------------------------------------------
+        # AUTO: IF QUOTATION CONFIRMED → MOVE TO WON
+        # -------------------------------------------------------------
+        for lead in self:
+            quotation = SaleOrder.search([('opportunity_id', '=', lead.id)], limit=1)
+            if quotation and quotation.state == 'sale':
+                won_stage = LeadStage.search([('name', 'ilike', 'Won')], limit=1)
+                if won_stage and lead.stage_id != won_stage:
+                    lead.stage_id = won_stage.id
+    
         return record
    
 
@@ -420,6 +363,7 @@ class CrmLead(models.Model):
 
 
         
+
 
 
 
