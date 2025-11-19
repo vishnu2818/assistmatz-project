@@ -207,38 +207,53 @@ class CrmLead(models.Model):
                         ))
         return super(CrmLead, self).write(vals)
 
-    def write(self, vals):
+
+    def _check_required_fields_on_stage_change(self):
+            """
+            Checks mandatory fields before moving out of 'New' stage.
+            Required fields: partner_id, email_from, phone, x_studio_job_type, 
+            x_studio_project, date_deadline.
+            """
+            self = self.ensure_one()
+            missing = []
+    
+            if not self.partner_id:
+                missing.append(_('Customer'))
+            if not self.email_from:
+                missing.append(_('Email'))
+            if not self.phone:
+                missing.append(_('Phone'))
+            if not self.x_studio_job_type:
+                missing.append(_('Job Type')) 
+            if not self.x_studio_project:
+                missing.append(_('Project'))
+            if not self.date_deadline:
+                missing.append(_('Forecast Date'))
+    
+            return missing
+    
+        # --- Overridden write Method ---
+        def write(self, vals):
             """
             Overrides the write method to enforce custom stage transition and 
             field validation rules.
             """
             
-            # --- Start of Original Logic Replication ---
-            
             user = self.env.user
-            # Ensure 'base.group_system' is correct for your Odoo version/setup
             is_admin = user.has_group('base.group_system') 
             LeadStage = self.env['crm.stage']
             SaleOrder = self.env['sale.order']
-            # Note: You need to define _check_required_fields_on_stage_change 
-            # somewhere in this class or a parent class for this to work.
             
-            # This part of the code needs to execute BEFORE the super().write(vals)
-            # to apply validations based on current and new values.
             for lead in self:
-                # Backup current values
-                # Use safe access to avoid errors if fields are not available
                 old_stage_name = lead.stage_id.name
                 old_stage_sequence = lead.stage_id.sequence
     
                 # 1. Check Stage Change Validations
                 if 'stage_id' in vals:
-                    # Get the new stage record
                     new_stage = LeadStage.browse(vals['stage_id'])
                     new_stage_sequence = new_stage.sequence
                     quotation = None
                     
-                    # Retrieve quotation if not in 'New'
                     if new_stage.name != 'New':
                         quotation = SaleOrder.search([('opportunity_id', '=', lead.id)], limit=1)
                     
@@ -248,7 +263,6 @@ class CrmLead(models.Model):
                     if not is_admin:
                         # Backward movement restriction
                         if new_stage_sequence < old_stage_sequence:
-                            # Allow specific backward moves (Hold -> Expecting/Commit/Quote Submitted)
                             allowed_backward = (
                                 old_stage_name == 'Hold' and 
                                 new_stage.name in ['Expecting (60%)', 'Commit (90%)', 'Quote Submitted']
@@ -265,8 +279,8 @@ class CrmLead(models.Model):
                         if new_stage.name == 'Quote Completed':
                             if old_stage_name != 'Quote Preparation' or not quotation:
                                 raise ValidationError("Only records in 'Quote Preparation' with a valid quotation can move to Quote Completed.")
-                            # This validation relies on a custom field 'quote_completed' on 'sale.order'
-                            if not quotation.quote_completed:
+                            # NOTE: Requires 'quote_completed' field on sale.order model
+                            if not quotation.quote_completed: 
                                 raise ValidationError("Please Use Quote Completed Button In Quotation for Move to Quote Completed")
                         
                         # Quote Preparation
@@ -304,7 +318,6 @@ class CrmLead(models.Model):
     
                     # --- VALIDATION LOGIC FOR ALL USERS (Admin/Non-Admin) ---
                     if old_stage_name == 'New' and new_stage.name != 'New':
-                        # This validation is applied if moving out of 'New'
                         missing_fields = lead._check_required_fields_on_stage_change()
                         if missing_fields:
                             raise ValidationError(
@@ -313,7 +326,6 @@ class CrmLead(models.Model):
     
                     # Forecast requirement for Commit 90%
                     if new_stage.name == 'Commit (90%)':
-                        # Check the *existing* forecast date if 'date_deadline' isn't being changed now
                         forecast_valid = vals.get('date_deadline') or lead.date_deadline
                         if not forecast_valid:
                             raise ValidationError("Forecast Date required to move to this stage.")
@@ -333,44 +345,38 @@ class CrmLead(models.Model):
     
                 # 2. Check Lost/Archiving Logic
                 if 'active' in vals and not vals['active']:
-                    # Archiving (active=False) implies moving to Lost
                     quotation = SaleOrder.search([('opportunity_id', '=', lead.id)], limit=1)
                     if not quotation:
                         raise ValidationError("You cannot manually move to the 'Lost' stage when the Lead has no Quotation.")
                     
-                    # Automatically set stage to 'Lost' when archiving/setting active=False
                     lost_stage = LeadStage.search([('name', '=', 'Lost')], limit=1)
                     if lost_stage:
                         vals['stage_id'] = lost_stage.id
-                        # We continue the loop so the `if 'stage_id' in vals` logic can re-validate 
-                        # the move to 'Lost' if needed, although the logic above covers it.
     
                 # 3. Check Forecast Date Validation
                 if 'date_deadline' in vals and vals['date_deadline']:
-                    # The field type conversion from string to date is necessary for Odoo's ORM
                     date_str = vals['date_deadline']
                     new_date = fields.Date.from_string(date_str) if isinstance(date_str, str) else date_str
                     
-                    if new_date < fields.Date.today():
+                    if new_date and new_date < fields.Date.today():
                         raise ValidationError("Forecast date cannot be in the past.")
     
-            # --- End of Original Logic Replication ---
-            
-            # Call the original (super) write method to perform the database update
+            # Execute the database write operation
             record = super().write(vals)
     
-            # --- Post-Write Logic (Auto-move from 'New' if required fields are filled) ---
+            # --- Post-Write Logic (Auto-move from 'New') ---
             for lead in self:
                 if lead.stage_id.name == 'New':
-                    # Re-check required fields based on the *new* state of the record
                     missing_fields = lead._check_required_fields_on_stage_change()
                     if not missing_fields:
                         stage = LeadStage.search([('name', '=', 'Quote Preparation')], limit=1)
                         if stage:
-                            # Use a direct write or assignment outside the main validation block
-                            lead.stage_id = stage.id 
+                            # Write the stage ID directly to skip re-validation in this case
+                            lead.stage_id = stage.id
                             
             return record
+
+   
 
 # class CrmLeadLost(models.TransientModel):
 #     _inherit = 'crm.lead.lost'
@@ -390,6 +396,7 @@ class CrmLead(models.Model):
 
 
         
+
 
 
 
