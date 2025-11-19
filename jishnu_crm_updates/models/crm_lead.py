@@ -49,17 +49,17 @@ class CrmLead(models.Model):
     #         else:
     #             lead.expected_revenue = 0.0
 
-    is_forecast_overdue = fields.Boolean(
-        compute="_compute_is_forecast_overdue",
-        store=False,
+    is_deadline_overdue = fields.Boolean(
+        compute="_compute_is_deadline_overdue",
+        store=False
     )
+    
+    @api.depends('date_deadline')
+    def _compute_is_deadline_overdue(self):
+        today = fields.Date.today()
+        for lead in self:
+            lead.is_deadline_overdue = bool(lead.date_deadline and lead.date_deadline <= today)
 
-    def _compute_is_forecast_overdue(self):
-        today = date.today()
-        for rec in self:
-            rec.is_forecast_overdue = False
-            if rec.date_deadline and rec.date_deadline <= today:
-                rec.is_forecast_overdue = True
    
     @api.constrains('stage_id')
     def _check_lost_stage(self):
@@ -225,6 +225,7 @@ class CrmLead(models.Model):
 
 
         
+
 
 
 
