@@ -1,0 +1,10 @@
+<odoo>
+    <data>
+        <template id="assets_backend_inherit_jishnu" inherit_id="web.assets_backend" name="Custom Backend Assets">
+            <xpath expr="." position="inside">
+                <script type="text/javascript" 
+                    src="/jishnu_crm_updates/static/src/js/tooltip_date.js"></script>
+            </xpath>
+        </template>
+    </data>
+</odoo>

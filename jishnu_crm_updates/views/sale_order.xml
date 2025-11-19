@@ -1,0 +1,41 @@
+<odoo>
+    <data>
+        <record id="sale_order_view_form_warranty_inherit" model="ir.ui.view">
+            <field name="name">sale.order.form.warranty.inherit</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+
+                <!-- Add Warranty checkbox under Customer -->
+                <xpath expr="//sheet/group/group/field[@name='partner_id']" position="after">
+                    <field name="is_warranty"/>
+                </xpath>
+
+                <!-- Add Warranty tab after Order Lines -->
+                <xpath expr="//notebook/page[@name='order_lines']" position="after">
+                    <page name="warranty_tab" string="Warranty">
+                        <field name="show_warranty_tab"/>
+
+                        <group>
+                            <group>
+                                <field name="brand"/>
+                                <field name="serial_no"/>
+                            </group>
+                            <group>
+                                <field name="purchase_date"/>
+                                <field name="warranty_close_date"/>
+                                <field name="extended_warranty_date"/>
+                            </group>
+                        </group>
+
+                        <group invisible="show_warranty_tab == True">
+                            <!-- <div class="alert alert-warning" role="alert" style="margin-top: 10px;">
+                                Enable the 'Warranty' option to view warranty details.
+                            </div> -->
+                        </group>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
