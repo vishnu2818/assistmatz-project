@@ -207,45 +207,40 @@ class CrmLead(models.Model):
                         ))
         return super(CrmLead, self).write(vals)
 
-    @api.model
     def write(self, vals):
-        # Call the parent method first to save the changes
-        res = super(CrmLead, self).write(vals)
+        # Save changes first
+        res = super().write(vals)
 
-        # Iterate over the updated records (self is a recordset)
+        # Fetch stage once
+        quote_prep_stage = self.env['crm.stage'].search([
+            ('name', '=', 'Quote Preparation')
+        ], limit=1)
+
+        if not quote_prep_stage:
+            return res  # Skip if stage not found
+
+        # Iterate updated records
         for lead in self:
-            # 1. Define the mandatory fields to check
-            # Use 'lead' to get the current value (or vals if the field is in vals)
-            
-            # Check for the existence of all mandatory fields
-            # Note: opportunity field is usually the 'name' field in crm.lead
             all_mandatory_fields_filled = all([
                 lead.partner_id,
                 lead.email_from,
                 lead.phone,
-                lead.x_studio_job_type, # Ensure these studio fields exist on the model
+                lead.x_studio_job_type,
                 lead.x_studio_project,
                 lead.date_deadline,
-                lead.name # Represents the opportunity/enquiry name
+                lead.name,
             ])
-            
-            # 2. Define the Target Stage ID
-            # You need to find the ID of the "Quote Preparation" stage.
-            # You can find it programmatically or via the UI/database.
-            # Let's find it by name:
-            quote_prep_stage = self.env['crm.stage'].search([
-                ('name', '=', 'Quote Preparation')
-            ], limit=1)
-            
-            # 3. Apply the Logic
-            if all_mandatory_fields_filled and quote_prep_stage:
-                # Check if the current stage is different from the target stage
-                if lead.stage_id.id != quote_prep_stage.id:
-                    lead.stage_id = quote_prep_stage.id # Update the stage
-                    # You may want to log this change for auditing
-                    lead.message_post(body="Status automatically updated to **Quote Preparation** because all mandatory fields were filled.")
+
+            if all_mandatory_fields_filled and lead.stage_id.id != quote_prep_stage.id:
+                lead.write({'stage_id': quote_prep_stage.id})
+                lead.message_post(
+                    body="Stage auto‑updated to **Quote Preparation** "
+                         "because all mandatory fields were completed."
+                )
 
         return res
+
+
 
 
     # def write(self, vals):
@@ -403,6 +398,7 @@ class CrmLead(models.Model):
 
 
         
+
 
 
 
