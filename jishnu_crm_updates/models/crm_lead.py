@@ -221,14 +221,13 @@ class CrmLead(models.Model):
 
         # Iterate updated records
         for lead in self:
-            # Check all mandatory fields are filled
+            # Check all mandatory fields are filled (date_deadline removed)
             all_mandatory_fields_filled = all([
                 bool(lead.partner_id),
                 bool(lead.email_from),
                 bool(lead.phone),
                 bool(lead.x_studio_job_type),
                 bool(lead.x_studio_project),
-                bool(lead.date_deadline),
                 bool(lead.name),
             ])
 
@@ -241,6 +240,8 @@ class CrmLead(models.Model):
                 )
 
         return res
+
+
 
 
 
@@ -402,6 +403,7 @@ class CrmLead(models.Model):
 
 
         
+
 
 
 
