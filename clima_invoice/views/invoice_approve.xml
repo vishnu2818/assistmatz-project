@@ -5,8 +5,8 @@
         <field name="name">invoice.approve.list</field>
         <field name="model">invoice.approve</field>
         <field name="arch" type="xml">
-            <list string="Invoice Approvals" >
-                <field name="move_id"/>
+            <list string="Invoice Approvals" editable="bottom" create="false" edit="false">
+                <field name="move_id" widget="many2one"/>
                 <field name="requested_by"/>
 <!--                <field name="approver_id"/>-->
                 <field name="approval_level"/>
@@ -54,7 +54,7 @@
     <record id="action_invoice_approval" model="ir.actions.act_window">
         <field name="name">Invoice Approvals</field>
         <field name="res_model">invoice.approve</field>
-        <field name="view_mode">list,form,search</field>
+        <field name="view_mode">list,search</field>
     </record>
 
     <!-- Menu Item -->
