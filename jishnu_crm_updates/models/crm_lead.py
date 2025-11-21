@@ -211,7 +211,7 @@ class CrmLead(models.Model):
         # Save changes first
         res = super().write(vals)
 
-        # Fetch stage once
+        # Fetch the "Quote Preparation" stage once
         quote_prep_stage = self.env['crm.stage'].search([
             ('name', '=', 'Quote Preparation')
         ], limit=1)
@@ -221,16 +221,18 @@ class CrmLead(models.Model):
 
         # Iterate updated records
         for lead in self:
+            # Check all mandatory fields are filled
             all_mandatory_fields_filled = all([
-                lead.partner_id,
-                lead.email_from,
-                lead.phone,
-                lead.x_studio_job_type,
-                lead.x_studio_project,
-                lead.date_deadline,
-                lead.name,
+                bool(lead.partner_id),
+                bool(lead.email_from),
+                bool(lead.phone),
+                bool(lead.x_studio_job_type),
+                bool(lead.x_studio_project),
+                bool(lead.date_deadline),
+                bool(lead.name),
             ])
 
+            # If all mandatory fields are filled and stage is different
             if all_mandatory_fields_filled and lead.stage_id.id != quote_prep_stage.id:
                 lead.write({'stage_id': quote_prep_stage.id})
                 lead.message_post(
@@ -239,6 +241,8 @@ class CrmLead(models.Model):
                 )
 
         return res
+
+
 
 
 
@@ -398,6 +402,7 @@ class CrmLead(models.Model):
 
 
         
+
 
 
 
