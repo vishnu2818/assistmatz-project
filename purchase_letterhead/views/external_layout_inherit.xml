@@ -41,7 +41,7 @@
         <!-- ✅ Replace FOOTER -->
         <xpath expr="//div[contains(@t-attf-class, 'o_footer_content')]" position="replace">
 
-           <div style="width:100%; margin-top:10px; position:relative; top:67px; ">
+           <div style="width:100%; margin-top:10px; position:relative; top:60px; ">
 
                 <!-- LOGOS -->
                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:10px;">
@@ -52,7 +52,7 @@
                     <img t-att-src="'/purchase_letterhead/static/src/img/midea_logo.png'"
                          style="height:57px; max-width:11%; object-fit:contain; margin-right:15px;"/>
 
-                    <img t-att-src="'/purchase_letterhead/static/src/img/Samsung_logo.png'"
+                    <img t-att-src="'/purchase_letterhead/static/src/img/Samsung_Logo.png'"
                          style="height:57px; max-width:11%; object-fit:contain; margin-right:15px;"/>
 
                     <img t-att-src="'/purchase_letterhead/static/src/img/gree_logo.png'"
