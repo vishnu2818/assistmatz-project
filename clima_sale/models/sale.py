@@ -50,40 +50,61 @@ class SaleOrder(models.Model):
     gm_approval_id = fields.One2many('sale.order.approve', 'sale_order_id')
     is_confirmed = fields.Boolean(default=False)
 
-    def action_confirm(self):
+    def write(self, vals):
+        res = super().write(vals)
+
+        # Check if state changed to 'sent'
+        if 'state' in vals and vals.get('state') == 'sent':
+            for order in self:
+                order._create_gm_approval()
+
+        return res
+
+    def _create_gm_approval(self):
+        """Creates GM approval record only once"""
         gm_group = self.env.ref('clima_sale.group_general_manager')
 
-        # If GM clicks confirm
-        if self.env.context.get('from_gm_approve') or self.env.user.has_group('clima_sale.group_general_manager'):
-            return super(SaleOrder, self).action_confirm()
+        # Prevent duplicates
+        if self.gm_approval_id.filtered(lambda r: r.state == 'pending'):
+            return
 
-        if gm_group in self.env.user.group_ids:
+        gm_users = gm_group.user_ids
+        if not gm_users:
+            raise UserError(_("No GM assigned in group General Manager."))
 
-            # Check if already pending
-            if self.gm_approval_id.filtered(lambda a: a.state == 'pending'):
-                raise UserError("Approval is already requested from General Manager.")
+        # Create approval
+        self.env['sale.order.approve'].create({
+            'sale_order_id': self.id,
+            'gm_id': gm_users[0].id,
+            'state': 'pending',
+        })
 
-            # Get GM users
-            gm_users = gm_group.user_ids
-            if not gm_users:
-                raise UserError("No General Manager assigned to the GM group.")
+        self.is_confirmed = False
 
-            gm_user = gm_users[0]
-
-            # Create approval record
-            self.env['sale.order.approve'].create({
-                'sale_order_id': self.id,
-                'gm_id': gm_user.id,
-                'state': 'pending',
-            })
-            self.is_confirmed = True
-
-            # DO NOT CONFIRM sale order! Just show message
+        # Rainbow effect only for UI calls
+        if not self._context.get('from_gm_approve'):
             return {
                 'effect': {
                     'fadeout': 'slow',
-                    'message': 'Approval request sent. Waiting for GM approval.',
+                    'message': 'Request sent to GM for approval.',
                     'type': 'rainbow_man',
                 }
             }
+
+    def action_confirm(self):
+        """Control confirmation process"""
+
+        # GM is allowed to confirm
+        if self.env.context.get('from_gm_approve') or \
+           self.env.user.has_group('clima_sale.group_general_manager'):
+            return super().action_confirm()
+
+        # Others: ensure GM approved
+        if self.gm_approval_id.filtered(lambda a: a.state == 'rejected'):
+            raise UserError(_("Quotation has Rejected by GM please re send the quotation."))
+        if not self.gm_approval_id.filtered(lambda a: a.state == 'approved'):
+            raise UserError(_("Quotation cannot be confirmed until GM approves."))
+
+        return super().action_confirm()
+
 
