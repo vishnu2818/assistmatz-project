@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="external_layout_boxed_inherit_letterhead"
+              inherit_id="web.external_layout_boxed">
+
+        <!-- ✅ Replace HEADER -->
+        <xpath expr="//div[@name='company_address']" position="replace">
+
+            <div style="width:100%; padding:8px 0;">
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+
+
+                <!-- RIGHT: CUSTOM HEADER CONTENT -->
+                    <div style="flex:1; text-align:right; margin-left:20px;">
+                        <div style="font-weight:700; font-size:15px; color:#111;">
+                            <t t-esc="company.name"/>
+                        </div>
+
+                            <div style="margin-top:8px; display:inline-block; background:#0b79a8; color:#ffffff;
+                                    padding:8px 14px; border-radius:3px; font-size:13px;">
+                                <t t-if="o_document_layout and o_document_layout.report_header">
+                                    <t t-out="o_document_layout.report_header"/>
+                                </t>
+                                <t t-elif="company and company.report_header">
+                                    <t t-out="company.report_header"/>
+                                </t>
+                                <t t-else="">
+                                    <span style="margin-right:12px;">&#160;</span>
+                                </t>
+                            </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+        </xpath>
+
+
+        <!-- ✅ Replace FOOTER -->
+        <xpath expr="//div[contains(@t-attf-class, 'o_footer_content')]" position="replace">
+
+           <div style="width:100%; margin-top:10px; position:relative; top:67px; ">
+
+                <!-- LOGOS -->
+               <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:10px;">
+
+                    <img t-att-src="'/purchase_letterhead/static/src/img/Mitsubishi-logo.png'"
+                         style="height:57px; max-width:11%; object-fit:contain; margin-right:15px;"/>
+
+                    <img t-att-src="'/purchase_letterhead/static/src/img/midea_logo.png'"
+                         style="height:57px; max-width:11%; object-fit:contain; margin-right:15px;"/>
+
+                    <img t-att-src="'/purchase_letterhead/static/src/img/Samsung_logo.png'"
+                         style="height:57px; max-width:11%; object-fit:contain; margin-right:15px;"/>
+
+                    <img t-att-src="'/purchase_letterhead/static/src/img/gree_logo.png'"
+                         style="height:57px; max-width:11%; object-fit:contain; margin-right:15px;"/>
+
+                    <img t-att-src="'/purchase_letterhead/static/src/img/bluestar_logo.png'"
+                         style="height:57px; max-width:11%; object-fit:contain; margin-right:15px;"/>
+
+                    <img t-att-src="'/purchase_letterhead/static/src/img/toshiba_logo.png'"
+                         style="height:57px; max-width:11%; object-fit:contain; margin-right:15px;"/>
+
+                    <img t-att-src="'/purchase_letterhead/static/src/img/Daikin-Logo.gif'"
+                         style="height:57px; max-width:11%; object-fit:contain; margin-right:15px;"/>
+
+                    <img t-att-src="'/purchase_letterhead/static/src/img/carrier_logo.png'"
+                         style="height:57px; max-width:11%; object-fit:contain; margin-right:15px;"/>
+
+                    <img t-att-src="'/purchase_letterhead/static/src/img/frego_logo.png'"
+                         style="height:57px; max-width:11%; object-fit:contain;"/>
+                </div>
+
+                
+                <div style="width:100%; white-space:nowrap; font-size:0; position:relative; right:30px;">
+
+                     <!-- BLUE RIBBON -->
+                     <div style="
+                         display:inline-block;
+                         vertical-align:top;
+                         background:#0b79a8;
+                         height:70px;
+                         padding:12px 20px;
+                         color:white;
+                         font-size:14px;
+                         width:50%;
+                         position:relative;
+                         white-space:normal;
+                         clip-path: polygon(0 0, calc(100% - 35px) 0, 100% 25px, 100% 100%, 0 100%);
+                     ">
+
+                         <div>
+                            <t t-if="o_document_layout and o_document_layout.report_footer">
+                                <t t-raw="o_document_layout.report_footer"/>
+                            </t>
+                            <t t-elif="company and company.report_footer">
+                                <t t-raw="company.report_footer"/>
+                            </t>
+                         </div>
+                     </div>
+
+    
+                     <!-- GREY RIBBON -->
+                     <div style="
+                         display:inline-block;
+                         background:#d7d7d7;
+                         height:20px;
+                         margin-top:50px;
+                         width:100%;
+                     "></div>
+
+                </div>
+
+
+            </div>
+
+
+        </xpath>
+
+    </template>
+
+</odoo>
