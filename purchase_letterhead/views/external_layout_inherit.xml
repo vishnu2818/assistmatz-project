@@ -47,31 +47,31 @@
                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:10px;">
 
                     <img t-att-src="'/purchase_letterhead/static/src/img/Mitsubishi-logo.png'"
-                         style="height:53px; max-width:11%; object-fit:contain; margin-right:15px;"/>
+                         style="height:50px; max-width:11%; object-fit:contain; margin-right:15px;"/>
 
                     <img t-att-src="'/purchase_letterhead/static/src/img/midea_logo.png'"
-                         style="height:53px; max-width:11%; object-fit:contain; margin-right:15px;"/>
+                         style="height:50px; max-width:11%; object-fit:contain; margin-right:15px;"/>
 
                     <img t-att-src="'/purchase_letterhead/static/src/img/Samsung_Logo.png'"
-                         style="height:53px; max-width:11%; object-fit:contain; margin-right:15px;"/>
+                         style="height:50px; max-width:11%; object-fit:contain; margin-right:15px;"/>
 
                     <img t-att-src="'/purchase_letterhead/static/src/img/gree_logo.png'"
-                         style="height:53px; max-width:11%; object-fit:contain; margin-right:15px;"/>
+                         style="height:50px; max-width:11%; object-fit:contain; margin-right:15px;"/>
 
                     <img t-att-src="'/purchase_letterhead/static/src/img/bluestar_logo.png'"
-                         style="height:53px; max-width:11%; object-fit:contain; margin-right:15px;"/>
+                         style="height:50px; max-width:11%; object-fit:contain; margin-right:15px;"/>
 
                     <img t-att-src="'/purchase_letterhead/static/src/img/toshiba_logo.png'"
-                         style="height:53px; max-width:11%; object-fit:contain; margin-right:15px;"/>
+                         style="height:50px; max-width:11%; object-fit:contain; margin-right:15px;"/>
 
                     <img t-att-src="'/purchase_letterhead/static/src/img/Daikin-Logo.gif'"
-                         style="height:53px; max-width:11%; object-fit:contain; margin-right:15px;"/>
+                         style="height:50px; max-width:11%; object-fit:contain; margin-right:15px;"/>
 
                     <img t-att-src="'/purchase_letterhead/static/src/img/carrier_logo.png'"
-                         style="height:53px; max-width:11%; object-fit:contain; margin-right:15px;"/>
+                         style="height:50px; max-width:11%; object-fit:contain; margin-right:15px;"/>
 
                     <img t-att-src="'/purchase_letterhead/static/src/img/frego_logo.png'"
-                         style="height:53px; max-width:11%; object-fit:contain;"/>
+                         style="height:50px; max-width:11%; object-fit:contain;"/>
                 </div>
 
                 
