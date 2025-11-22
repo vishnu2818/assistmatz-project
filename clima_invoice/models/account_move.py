@@ -13,7 +13,7 @@ class AccountMove(models.Model):
         gm_group = self.env.ref('clima_sale.group_general_manager')
 
         # Allow GM final action (from GM approval button)
-        if self.env.context.get('from_gm_approve'):
+        if self.env.context.get('from_gm_approve') or self.env.user.has_group('clima_sale.group_general_manager') or self.env.user.has_group('clima_invoice.group_invoice_manager'):
             return super().action_post()
 
         # --- 1. Check if approval exists already ---
