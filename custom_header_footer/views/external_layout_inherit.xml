@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="external_layout_boxed_inherit_letterhead" inherit_id="web.external_layout_boxed">
+
+        <!-- HEADER -->
+        <xpath expr="//div[@name='company_address']" position="replace">
+            <div style="width:75%; text-align:center; position:relative; left:190px;bottom:25px">
+                <t t-if="company.custom_header_image">
+                    <img t-att-src="'/web/image?model=res.company&amp;id=%s&amp;field=custom_header_image' % company.id"
+                         style="max-height:150px; width:100%;"/>
+                </t>
+            </div>
+        </xpath>
+
+        <!-- FOOTER -->
+        <xpath expr="//div[contains(@t-attf-class, 'o_footer_content')]" position="replace">
+            <div style="width:100%; text-align:center; position:relative; top:30px;right:35px; overflow:visible;">
+                <t t-if="company.custom_footer_image">
+                    <img t-att-src="'/web/image?model=res.company&amp;id=%s&amp;field=custom_footer_image' % company.id"
+                         style="max-height:140px; width:108%; margin:0; padding:0;"/>
+                </t>
+            </div>
+        </xpath>
+
+
+    </template>
+</odoo>
