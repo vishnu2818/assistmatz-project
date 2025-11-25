@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+
+    <record id="view_sale_order_approve_list" model="ir.ui.view">
+        <field name="name">sale.order.approve.list</field>
+        <field name="model">sale.order.approve</field>
+        <field name="arch" type="xml">
+            <list string="Sale Order Approvals" editable="bottom" create="false" edit="false">
+                <field name="sale_order_id" widget="many2one"/>
+                <field name="requested_by"/>
+                <field name="rejection_reason"/>
+                <field name="state"/>
+
+                <!-- Approve Button -->
+                <button name="action_approve"
+                        type="object"
+                        string="Approve"
+                        class="btn-primary"
+                        groups="clima_sale.group_general_manager"
+                        invisible="state != 'pending'"
+                />
+
+                <!-- Reject Button (opens wizard) -->
+                <button name="action_open_reject_wizard"
+                        type="object"
+                        string="Reject"
+                        class="btn-danger"
+                        groups="clima_sale.group_general_manager"
+                        invisible="state != 'pending'"
+                />
+            </list>
+        </field>
+    </record>
+
+    <record id="view_sale_order_approve_form" model="ir.ui.view">
+        <field name="name">sale.order.approve.form</field>
+        <field name="model">sale.order.approve</field>
+        <field name="arch" type="xml">
+            <form string="Sale Order Approval">
+                <sheet>
+                    <group>
+                        <field name="sale_order_id" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_sale_order_approve_search" model="ir.ui.view">
+        <field name="name">sale.order.approve.search</field>
+        <field name="model">sale.order.approve</field>
+        <field name="arch" type="xml">
+            <search string="Search Approvals">
+                <field name="sale_order_id"/>
+            </search>
+        </field>
+    </record>
+
+
+    <record id="action_sale_order_approve" model="ir.actions.act_window">
+        <field name="name">Sale Order Approvals</field>
+        <field name="res_model">sale.order.approve</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <menuitem id="menu_sale_order_approve"
+              name="Approvals"
+              parent="sale.sale_menu_root"
+              action="action_sale_order_approve"
+              sequence="21"/>
+
+
+    <record id="sale_order_form_inherit_confirm_button" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.confirm.button</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Hide Confirm button -->
+            <xpath expr="//button[@name='action_confirm']" position="attributes">
+                <attribute name="invisible">is_confirmed</attribute>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>
