@@ -8,18 +8,18 @@ _logger = logging.getLogger(__name__)  # Define the logger
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
-    quote_completed = fields.Boolean(string='Quote Completed', default=False)
+    # quote_completed = fields.Boolean(string='Quote Completed', default=False)
 
-    def action_mark_quote_completed(self):
-        for order in self:
-            opportunity = order.opportunity_id
-            if not opportunity:
-                raise ValidationError("This quotation is not linked to any opportunity.")
-            if order.amount_total <= 0:
-                raise ValidationError("Expected revenue must be greater than 0 to mark as 'Quote Completed'.")
+    # def action_mark_quote_completed(self):
+    #     for order in self:
+    #         opportunity = order.opportunity_id
+    #         if not opportunity:
+    #             raise ValidationError("This quotation is not linked to any opportunity.")
+    #         if order.amount_total <= 0:
+    #             raise ValidationError("Expected revenue must be greater than 0 to mark as 'Quote Completed'.")
 
-            if not order.quote_completed:
-                order.quote_completed = True
+    #         if not order.quote_completed:
+    #             order.quote_completed = True
 
     # def action_mark_quote_completed(self):
     #     for order in self:
@@ -83,5 +83,6 @@ class SaleOrder(models.Model):
                         order.opportunity_id.stage_id = stage.id
 
         return rec
+
 
 
