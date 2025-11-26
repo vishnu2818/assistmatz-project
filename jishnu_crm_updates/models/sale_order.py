@@ -17,6 +17,7 @@ class SaleOrder(models.Model):
         compute="_compute_show_warranty_tab",
         store=True,
     )
+    quote_completed = fields.Boolean(string="Quote Completed")
     @api.depends('is_warranty')
     def _compute_show_warranty_tab(self):
         for order in self:
