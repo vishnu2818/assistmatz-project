@@ -10,6 +10,8 @@
             <xpath expr="//field[@name='state']" position="attributes">
                 <attribute name="selection_add">[('to_approve','Waiting for Approvals')]</attribute>
             </xpath>
+            <xpath expr="//button[@name='action_post']" position="replace">
+            </xpath>
         </field>
     </record>
 

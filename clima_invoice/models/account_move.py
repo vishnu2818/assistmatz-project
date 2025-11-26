@@ -7,6 +7,19 @@ class AccountMove(models.Model):
 
     invoice_approval_ids = fields.One2many('invoice.approve', 'move_id')
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super(AccountMove, self).create(vals_list)
+
+        invoice_manager_group = self.env.ref('clima_invoice.group_invoice_manager')
+        gm_group = self.env.ref('clima_sale.group_general_manager')
+
+        for move in records:
+            if move.move_type in ['out_invoice', 'in_invoice']:
+                move._create_initial_approvals(invoice_manager_group, gm_group)
+
+        return records
+
     def action_post(self):
 
         invoice_manager_group = self.env.ref('clima_invoice.group_invoice_manager')
