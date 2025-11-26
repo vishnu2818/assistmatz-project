@@ -27,6 +27,31 @@ class Lead(models.Model):
 
 
 
+    def _check_required_fields_on_stage_change(self):
+        missing_fields = []
+        for lead in self:
+            if not lead.partner_id:
+                missing_fields.append("Customer")
+            if not lead.x_studio_job_type:
+                missing_fields.append("Job Type")
+
+            if not lead.x_studio_project:
+                missing_fields.append("Project")
+
+            if not lead.email_from:
+                missing_fields.append("Email")
+
+            if not lead.phone:
+                missing_fields.append("Phone")
+                
+            if not lead.date_deadline:
+                missing_fields.append("Forecast Date")
+      
+
+        return missing_fields
+
+
+
 
 
 
@@ -167,6 +192,7 @@ class Lead(models.Model):
                         lead.stage_id = stage.id
                         
         return record
+
 
 
 
