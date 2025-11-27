@@ -18,14 +18,19 @@ class SaleOrder(models.Model):
             if order.amount_total <= 0:
                 raise ValidationError("Expected revenue must be greater than 0 to mark as 'Quote Completed'.")
     
-            # ---------- NEW LINES ADDED HERE ----------
-            quote_completed_stage = self.env['crm.stage'].search([('name', '=', 'Quote Completed')], limit=1)
-            if quote_completed_stage:
-                opportunity.with_context(skip_auto_stage=True, bypass_stage_validations=True).write({'stage_id': quote_completed_stage.id})
-            # -----------------------------------------------------
-    
+            # Ensure the quotation flag is set BEFORE moving the opportunity stage
             if not order.quote_completed:
                 order.quote_completed = True
+    
+            # Find Quote Completed stage and move opportunity (bypass validations & avoid recursion)
+            quote_completed_stage = self.env['crm.stage'].search([('name', '=', 'Quote Completed')], limit=1)
+            if quote_completed_stage:
+                opportunity.sudo().with_context(
+                    skip_auto_stage=True,
+                    bypass_stage_validations=True
+                ).write({'stage_id': quote_completed_stage.id})
+
+        return True
     @api.model
     def write(self, vals):
 
@@ -77,6 +82,7 @@ class SaleOrder(models.Model):
                         order.opportunity_id.stage_id = stage.id
 
         return rec
+
 
 
 
