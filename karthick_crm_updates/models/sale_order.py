@@ -11,39 +11,70 @@ class SaleOrder(models.Model):
     quote_completed = fields.Boolean(string='Quote Completed',default=False)
     
     def action_mark_quote_completed(self):
-        for order in self:
+        print("\n====== BUTTON CLICKED: action_mark_quote_completed ======\n")
+        _logger.info("BUTTON CLICKED: action_mark_quote_completed")
 
-            # 1) Must have linked opportunity
+        for order in self:
+            print("Processing order:", order.id)
+            _logger.info("Processing Sale Order ID: %s", order.id)
+
+            # 1) Check opportunity
             opportunity = order.opportunity_id
+            print("Opportunity:", opportunity)
+            _logger.info("Opportunity found: %s", opportunity)
+
             if not opportunity:
+                print("ERROR: No opportunity linked!")
+                _logger.error("No opportunity linked to sale order %s", order.id)
                 raise ValidationError(_("This quotation is not linked to any opportunity."))
 
-            # 2) Amount must be > 0
+            # 2) Validate amount
+            print("Quotation Amount:", order.amount_total)
+            _logger.info("Quotation Amount: %s", order.amount_total)
+
             if order.amount_total <= 0:
-                raise ValidationError(_("Expected revenue must be greater than 0 to mark as 'Quote Completed'."))
+                print("ERROR: Amount is zero!")
+                _logger.error("Amount is zero for order %s", order.id)
+                raise ValidationError(_("Expected revenue must be greater than 0."))
 
             # 3) Mark boolean
+            print("Marking quote_completed = True")
+            _logger.info("Setting quote_completed TRUE for order %s", order.id)
             order.quote_completed = True
 
-            # 4) Get CRM Stage (Odoo 19 compatible search)
-            stage = self.env['crm.stage'].search([
+            # 4) Find CRM Stage
+            print("Searching CRM stage 'Quote Completed'...")
+            _logger.info("Searching CRM stage 'Quote Completed'")
+
+            stage = self.env['crm.stage'].sudo().search([
                 ('name', '=', 'Quote Completed')
             ], limit=1)
 
+            print("Stage found:", stage)
+            _logger.info("Stage search result: %s", stage)
+
             if not stage:
-                raise ValidationError(_("CRM stage 'Quote Completed' not found. Please create it."))
+                print("ERROR: Stage not found!")
+                _logger.error("CRM stage 'Quote Completed' not found")
+                raise ValidationError(_("CRM stage 'Quote Completed' not found."))
 
-            # 5) Update the opportunity stage (Odoo 19 requires sudo for CRM)
-            opportunity.sudo().write({
-                'stage_id': stage.id
-            })
+            # 5) Update opportunity stage
+            print("Updating opportunity stage...")
+            _logger.info("Updating stage for opportunity %s", opportunity.id)
 
-        # 6) Odoo 19: FORCE REFRESH screen
+            opportunity.sudo().write({'stage_id': stage.id})
+
+            print("Stage updated successfully!")
+            _logger.info("Stage updated successfully for opportunity %s", opportunity.id)
+
+        print("\n====== ACTION FINISHED SUCCESSFULLY ======\n")
+        _logger.info("action_mark_quote_completed FINISHED SUCCESSFULLY")
+
+        # reload UI
         return {
             "type": "ir.actions.client",
             "tag": "reload",
         }
-
  
 
 
@@ -99,6 +130,7 @@ class SaleOrder(models.Model):
                         order.opportunity_id.stage_id = stage.id
 
         return rec
+
 
 
 
