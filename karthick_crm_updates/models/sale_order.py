@@ -18,15 +18,17 @@ class SaleOrder(models.Model):
             if order.amount_total <= 0:
                 raise ValidationError("Expected revenue must be greater than 0 to mark as 'Quote Completed'.")
     
+            # Mark quote completed
             if not order.quote_completed:
                 order.quote_completed = True
     
-            # ★ ADD THESE LINES ★
-            quote_preparation_stage = self.env['crm.stage'].search([('name', '=', 'Quote Preparation')], limit=1)
-            quote_completed_stage = self.env['crm.stage'].search([('name', '=', 'Quote Completed')], limit=1)
-    
-            if opportunity.stage_id.id == quote_preparation_stage.id:
-                opportunity.stage_id = quote_completed_stage.id
+            # -------------------------
+            #  ADD THESE TWO LINES
+            # -------------------------
+            # Find the target stage
+            stage_completed = self.env['crm.stage'].search([('name', '=', 'Quote Completed')], limit=1)
+            if stage_completed:
+                opportunity.stage_id = stage_completed.id
 
 
 
@@ -82,6 +84,7 @@ class SaleOrder(models.Model):
                         order.opportunity_id.stage_id = stage.id
 
         return rec
+
 
 
 
