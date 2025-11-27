@@ -12,30 +12,36 @@ class SaleOrder(models.Model):
     
     def action_mark_quote_completed(self):
         for order in self:
-            # 1. Check linked opportunity
+
+            # 1) Must have linked opportunity
             opportunity = order.opportunity_id
             if not opportunity:
-                raise ValidationError("This quotation is not linked to any opportunity.")
-            
-            # 2. Check valid amount
+                raise ValidationError(_("This quotation is not linked to any opportunity."))
+
+            # 2) Amount must be > 0
             if order.amount_total <= 0:
-                raise ValidationError("Expected revenue must be greater than 0 to mark as 'Quote Completed'.")
-    
-            # 3. Mark Boolean
+                raise ValidationError(_("Expected revenue must be greater than 0 to mark as 'Quote Completed'."))
+
+            # 3) Mark boolean
             order.quote_completed = True
-    
-            # 4. Find CRM Stage named "Quote Completed"
-            stage = self.env['crm.stage'].search([('name', '=', 'Quote Completed')], limit=1)
+
+            # 4) Get CRM Stage (Odoo 19 compatible search)
+            stage = self.env['crm.stage'].search([
+                ('name', '=', 'Quote Completed')
+            ], limit=1)
+
             if not stage:
-                raise ValidationError("CRM stage 'Quote Completed' not found. Please create it.")
-    
-            # 5. Update Opportunity Stage
-            opportunity.sudo().write({'stage_id': stage.id})
-    
-        # 6. Force UI Refresh
+                raise ValidationError(_("CRM stage 'Quote Completed' not found. Please create it."))
+
+            # 5) Update the opportunity stage (Odoo 19 requires sudo for CRM)
+            opportunity.sudo().write({
+                'stage_id': stage.id
+            })
+
+        # 6) Odoo 19: FORCE REFRESH screen
         return {
-            'type': 'ir.actions.client',
-            'tag': 'reload',
+            "type": "ir.actions.client",
+            "tag": "reload",
         }
 
  
@@ -93,6 +99,7 @@ class SaleOrder(models.Model):
                         order.opportunity_id.stage_id = stage.id
 
         return rec
+
 
 
 
