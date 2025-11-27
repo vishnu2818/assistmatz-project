@@ -46,7 +46,7 @@
         </xpath>
 
         <!-- Add S.No as the first column in each line -->
-        <xpath expr="//t[not(@t-if)]//td[span[@t-field='line.name']]" position="before">
+        <xpath expr="//td[span[@t-field='line.name']]" position="before">
             <td class="text-center" style="width: 5%;">
                 <t t-set="sno_counter" t-value="(sno_counter or 0) + 1"/>
                 <span t-esc="sno_counter"/>
