@@ -11,23 +11,43 @@ class SaleOrder(models.Model):
     quote_completed = fields.Boolean(string='Quote Completed',default=False)
     
     def action_mark_quote_completed(self):
+        """Button action: validate, set quote_completed flag and move linked opportunity
+           from 'Quote Preparation' -> 'Quote Completed' (only if currently in 'Quote Preparation')."""
+        CrmStage = self.env['crm.stage']
+
+        # --- TWO LINES you asked for: locate the stages once (before loop) ---
+        stage_quote_preparation = CrmStage.search([('name', '=', 'Quote Preparation')], limit=1)
+        stage_quote_completed   = CrmStage.search([('name', '=', 'Quote Completed')], limit=1)
+
+        # If stages missing, raise so admin can create them or adjust names
+        if not stage_quote_preparation or not stage_quote_completed:
+            raise UserError(_("CRM stages 'Quote Preparation' and/or 'Quote Completed' were not found. "
+                               "Make sure they exist with exact names or update the code to use correct names."))
+
         for order in self:
             opportunity = order.opportunity_id
+
+            # VALIDATIONS
             if not opportunity:
-                raise ValidationError("This quotation is not linked to any opportunity.")
-    
+                raise ValidationError(_("This quotation is not linked to any opportunity."))
             if order.amount_total <= 0:
-                raise ValidationError("Expected revenue must be greater than 0 to mark as 'Quote Completed'.")
-    
+                raise ValidationError(_("Expected revenue must be greater than 0 to mark as 'Quote Completed'."))
+
+            # MARK QUOTE COMPLETED FLAG (if not already)
             if not order.quote_completed:
                 order.quote_completed = True
-    
-            # ---------------------------
-            # 🔥 ADD THESE TWO LINES ONLY
-            # ---------------------------
-            stage_completed = self.env['crm.stage'].search([('name', '=', 'Quote Completed')], limit=1)
-            if stage_completed:
-                opportunity.stage_id = stage_completed.id
+
+            # --- check current stage and change it if it is exactly 'Quote Preparation' ---
+            # (we grab current stage once to make sure it's comparable)
+            current_stage = opportunity.stage_id
+            if current_stage and current_stage.id == stage_quote_preparation.id:
+                # write() is safer for many frameworks (triggers ORM write hooks)
+                opportunity.write({'stage_id': stage_quote_completed.id})
+                # optional: post a message to chatter for traceability
+                opportunity.message_post(body=_("Moved to '%s' because quotation %s was marked Quote Completed.")
+                                               % (stage_quote_completed.name, order.name))
+
+        return True
 
 
 
@@ -83,6 +103,7 @@ class SaleOrder(models.Model):
                         order.opportunity_id.stage_id = stage.id
 
         return rec
+
 
 
 
