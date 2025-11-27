@@ -12,31 +12,33 @@ class SaleOrder(models.Model):
     
     def action_mark_quote_completed(self):
         for order in self:
-            # 1. Ensure Quotation is linked to Opportunity
+
+            # 1. Validate Opportunity exists
             opportunity = order.opportunity_id
             if not opportunity:
-                # Rationale: Stops if no linked opportunity.
-                raise ValidationError("This quotation is not linked to any opportunity.")
-            
-            # 2. Ensure Amount > 0
+                raise ValidationError(_("This quotation is not linked to any opportunity."))
+
+            # 2. Validate Amount
             if order.amount_total <= 0:
-                # Rationale: Ensures a valid quote value.
-                raise ValidationError("Expected revenue must be greater than 0 to mark as 'Quote Completed'.")
-            
-            # 3. Mark the Boolean (ensures it's only written once)
+                raise ValidationError(_("Expected revenue must be greater than 0 to mark as 'Quote Completed'."))
+
+            # 3. Mark Boolean
             if not order.quote_completed:
-                order.write({'quote_completed': True})
-            
-            # 4. Get "Quote Completed" Stage (Stage to move TO)
-            # Assuming 'crm.stage' is the correct model for CRM pipeline stages
+                order.quote_completed = True
+
+            # 4. Get Stage
             stage = self.env['crm.stage'].search([('name', '=', 'Quote Completed')], limit=1)
             if not stage:
-                raise ValidationError("CRM stage 'Quote Completed' not found. Please create it in CRM settings.")
-            
-            # 5. Update Opportunity Stage using sudo() (The core stage change)
+                raise ValidationError(_("CRM stage 'Quote Completed' not found. Please create it."))
+
+            # 5. Update Opportunity Stage
             opportunity.sudo().write({'stage_id': stage.id})
-                
-        return True
+
+        # 6. Force client refresh so stage update is visible
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'reload',
+        }
 
  
 
@@ -93,6 +95,7 @@ class SaleOrder(models.Model):
                         order.opportunity_id.stage_id = stage.id
 
         return rec
+
 
 
 
