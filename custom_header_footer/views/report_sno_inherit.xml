@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--Report Purchase Order-->
+    <template id="report_purchaseorder_document_inherit_sno" inherit_id="purchase.report_purchaseorder_document">
+
+        <!-- Add S.No column header -->
+        <xpath expr="//thead/tr/th[@name='th_description']" position="before">
+            <th class="text-center">S.No</th>
+        </xpath>
+
+        <!-- Add S.No as the first column in each line -->
+        <xpath expr="//t[not(@t-if)]//td[span[@t-field='line.name']]" position="before">
+            <td class="text-center" style="width: 5%;">
+                <t t-set="sno_counter" t-value="(sno_counter or 0) + 1"/>
+                <span t-esc="sno_counter"/>
+            </td>
+        </xpath>
+
+    </template>
+
+    <!--Report Purchase Quotation-->
+    <template id="report_purchasequotation_document_inherit_sno" inherit_id="purchase.report_purchasequotation_document">
+
+        <!-- Add S.No column header -->
+        <xpath expr="//thead/tr/th[@name='th_description']" position="before">
+            <th class="text-center">S.No</th>
+        </xpath>
+
+        <!-- Add S.No as the first column in each line -->
+        <xpath expr="//t[not(@t-if)]//td[span[@t-field='order_line.name']]" position="before">
+            <td class="text-center" style="width: 5%;">
+                <t t-set="sno_counter" t-value="(sno_counter or 0) + 1"/>
+                <span t-esc="sno_counter"/>
+            </td>
+        </xpath>
+
+    </template>
+
+    
+    <!--Report Sales Pdf Quote-->
+    <template id="report_salesorder_document_inherit_sno" inherit_id="sale.report_saleorder_document">
+
+        <!-- Add S.No column header -->
+        <xpath expr="//thead/tr/th[@name='th_description']" position="before">
+            <th class="text-center">S.No</th>
+        </xpath>
+
+        <!-- Add S.No as the first column in each line -->
+        <xpath expr="//t[not(@t-if)]//td[span[@t-field='line.name']]" position="before">
+            <td class="text-center" style="width: 5%;">
+                <t t-set="sno_counter" t-value="(sno_counter or 0) + 1"/>
+                <span t-esc="sno_counter"/>
+            </td>
+        </xpath>
+
+    </template>
+
+    <!--Report Invoice Pdf-->
+    <template id="report_invoice_document_inherit_sno" inherit_id="account.report_invoice_document">
+
+        <!-- Add S.No column header -->
+        <xpath expr="//thead/tr/th[@name='th_description']" position="before">
+            <th class="text-center">S.No</th>
+        </xpath>
+
+        <!-- Add S.No as the first column in each line -->
+        <xpath expr="//t[not(@t-if)]//td[span[@t-field='line.name']]" position="before">
+            <td class="text-center" style="width: 5%;">
+                <t t-set="sno_counter" t-value="(sno_counter or 0) + 1"/>
+                <span t-esc="sno_counter"/>
+            </td>
+        </xpath>
+
+    </template>
+
+
+
+</odoo>

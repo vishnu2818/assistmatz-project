@@ -7,6 +7,7 @@
     'data': [
         'views/res_company_views.xml',
         'views/external_layout_inherit.xml',
+        'views/report_sno_inherit.xml',
     ],
     'installable': True,
     'application': False,
