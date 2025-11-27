@@ -5,7 +5,7 @@
 
         <!-- Add S.No column header -->
         <xpath expr="//thead/tr/th[@name='th_description']" position="before">
-            <th class="text-center">S.No</th>
+            <th class="text-center"><strong>S.No</strong></th>
         </xpath>
 
         <!-- Add S.No as the first column in each line -->
@@ -23,7 +23,7 @@
 
         <!-- Add S.No column header -->
         <xpath expr="//thead/tr/th[@name='th_description']" position="before">
-            <th class="text-center">S.No</th>
+            <th class="text-center"><strong>S.No</strong></th>
         </xpath>
 
         <!-- Add S.No as the first column in each line -->
@@ -42,7 +42,7 @@
 
         <!-- Add S.No column header -->
         <xpath expr="//thead/tr/th[@name='th_description']" position="before">
-            <th class="text-center">S.No</th>
+            <th class="text-center"><strong>S.No</strong></th>
         </xpath>
 
         <!-- Add S.No as the first column in each line -->
@@ -60,7 +60,7 @@
 
         <!-- Add S.No column header -->
         <xpath expr="//thead/tr/th[@name='th_description']" position="before">
-            <th class="text-center">S.No</th>
+            <th class="text-center"><strong>S.No</strong></th>
         </xpath>
 
         <!-- Add S.No as the first column in each line -->
