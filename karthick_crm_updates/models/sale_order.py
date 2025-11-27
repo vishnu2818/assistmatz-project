@@ -11,16 +11,21 @@ class SaleOrder(models.Model):
     quote_completed = fields.Boolean(string='Quote Completed',default=False)
     
     def action_mark_quote_completed(self):
-            for order in self:
-                opportunity = order.opportunity_id
-                if not opportunity:
-                    raise ValidationError("This quotation is not linked to any opportunity.")
-                if order.amount_total <= 0:
-                    raise ValidationError("Expected revenue must be greater than 0 to mark as 'Quote Completed'.")
-                    
-                if not order.quote_completed:
-                    order.quote_completed = True
-
+        for order in self:
+            opportunity = order.opportunity_id
+            if not opportunity:
+                raise ValidationError("This quotation is not linked to any opportunity.")
+            if order.amount_total <= 0:
+                raise ValidationError("Expected revenue must be greater than 0 to mark as 'Quote Completed'.")
+    
+            # ---------- NEW LINES ADDED HERE ----------
+            quote_completed_stage = self.env['crm.stage'].search([('name', '=', 'Quote Completed')], limit=1)
+            if quote_completed_stage:
+                opportunity.with_context(skip_auto_stage=True, bypass_stage_validations=True).write({'stage_id': quote_completed_stage.id})
+            # -----------------------------------------------------
+    
+            if not order.quote_completed:
+                order.quote_completed = True
     @api.model
     def write(self, vals):
 
@@ -72,6 +77,7 @@ class SaleOrder(models.Model):
                         order.opportunity_id.stage_id = stage.id
 
         return rec
+
 
 
 
