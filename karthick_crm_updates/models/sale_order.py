@@ -11,70 +11,33 @@ class SaleOrder(models.Model):
     quote_completed = fields.Boolean(string='Quote Completed',default=False)
     
     def action_mark_quote_completed(self):
-        print("\n====== BUTTON CLICKED: action_mark_quote_completed ======\n")
-        _logger.info("BUTTON CLICKED: action_mark_quote_completed")
+        """ Button: Mark Quote as Completed """
+        CrmStage = self.env['crm.stage']
+    
+        # Get required stages
+        stage_quote_preparation = CrmStage.search([('name', '=', 'Quote Preparation')], limit=1)
+        stage_quote_completed = CrmStage.search([('name', '=', 'Quote Completed')], limit=1)
 
-        for order in self:
-            print("Processing order:", order.id)
-            _logger.info("Processing Sale Order ID: %s", order.id)
+    for order in self:
 
-            # 1) Check opportunity
-            opportunity = order.opportunity_id
-            print("Opportunity:", opportunity)
-            _logger.info("Opportunity found: %s", opportunity)
+        # --- VALIDATIONS ---
+        if not order.opportunity_id:
+            raise ValidationError("This quotation is not linked to any opportunity.")
 
-            if not opportunity:
-                print("ERROR: No opportunity linked!")
-                _logger.error("No opportunity linked to sale order %s", order.id)
-                raise ValidationError(_("This quotation is not linked to any opportunity."))
+        if order.amount_total <= 0:
+            raise ValidationError("Expected revenue must be greater than 0 to mark as Quote Completed.")
 
-            # 2) Validate amount
-            print("Quotation Amount:", order.amount_total)
-            _logger.info("Quotation Amount: %s", order.amount_total)
-
-            if order.amount_total <= 0:
-                print("ERROR: Amount is zero!")
-                _logger.error("Amount is zero for order %s", order.id)
-                raise ValidationError(_("Expected revenue must be greater than 0."))
-
-            # 3) Mark boolean
-            print("Marking quote_completed = True")
-            _logger.info("Setting quote_completed TRUE for order %s", order.id)
+        # --- MARK QUOTE COMPLETED FLAG ---
+        if not order.quote_completed:
             order.quote_completed = True
 
-            # 4) Find CRM Stage
-            print("Searching CRM stage 'Quote Completed'...")
-            _logger.info("Searching CRM stage 'Quote Completed'")
+        opportunity = order.opportunity_id
 
-            stage = self.env['crm.stage'].sudo().search([
-                ('name', '=', 'Quote Completed')
-            ], limit=1)
+        # --- AUTO CRM STAGE UPDATE ---
+        if opportunity.stage_id.id == stage_quote_preparation.id:
+            opportunity.stage_id = stage_quote_completed.id
 
-            print("Stage found:", stage)
-            _logger.info("Stage search result: %s", stage)
-
-            if not stage:
-                print("ERROR: Stage not found!")
-                _logger.error("CRM stage 'Quote Completed' not found")
-                raise ValidationError(_("CRM stage 'Quote Completed' not found."))
-
-            # 5) Update opportunity stage
-            print("Updating opportunity stage...")
-            _logger.info("Updating stage for opportunity %s", opportunity.id)
-
-            opportunity.sudo().write({'stage_id': stage.id})
-
-            print("Stage updated successfully!")
-            _logger.info("Stage updated successfully for opportunity %s", opportunity.id)
-
-        print("\n====== ACTION FINISHED SUCCESSFULLY ======\n")
-        _logger.info("action_mark_quote_completed FINISHED SUCCESSFULLY")
-
-        # reload UI
-        return {
-            "type": "ir.actions.client",
-            "tag": "reload",
-        }
+    return True
  
 
 
@@ -130,6 +93,7 @@ class SaleOrder(models.Model):
                         order.opportunity_id.stage_id = stage.id
 
         return rec
+
 
 
 
