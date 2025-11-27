@@ -12,25 +12,28 @@ class SaleOrder(models.Model):
     
     def action_mark_quote_completed(self):
         for order in self:
-            # Ensure linked opportunity
-            if not order.opportunity_id:
+    
+            # 1. Ensure Quotation is linked to Opportunity
+            opportunity = order.opportunity_id
+            if not opportunity:
                 raise ValidationError("This quotation is not linked to any opportunity.")
-            # Ensure positive revenue
+    
+            # 2. Ensure Amount > 0
             if order.amount_total <= 0:
                 raise ValidationError("Expected revenue must be greater than 0 to mark as 'Quote Completed'.")
-
-            # Mark flag
+    
+            # 3. Mark the Boolean
             if not order.quote_completed:
                 order.write({'quote_completed': True})
-
-            # Find stage
+    
+            # 4. Get "Quote Completed" Stage
             stage = self.env['crm.stage'].search([('name', '=', 'Quote Completed')], limit=1)
             if not stage:
                 raise ValidationError("CRM stage 'Quote Completed' not found. Please create it in CRM settings.")
-
-            # Move opportunity
-            order.opportunity_id.sudo().write({'stage_id': stage.id})
-
+    
+            # 5. Update Opportunity Stage using sudo()
+            opportunity.sudo().write({'stage_id': stage.id})
+    
         return True
 
  
@@ -88,6 +91,7 @@ class SaleOrder(models.Model):
                         order.opportunity_id.stage_id = stage.id
 
         return rec
+
 
 
 
