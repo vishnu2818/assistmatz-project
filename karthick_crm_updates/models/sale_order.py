@@ -10,35 +10,35 @@ class SaleOrder(models.Model):
 
     quote_completed = fields.Boolean(string='Quote Completed',default=False)
     
-    # def action_mark_quote_completed(self):
-    #     """ Button: Mark Quote as Completed """
-    #     CrmStage = self.env['crm.stage']
+    def action_mark_quote_completed(self):
+        """ Button: Mark Quote as Completed """
+        CrmStage = self.env['crm.stage']
     
-    #     # Get required stages
-    #     stage_quote_preparation = CrmStage.search([('name', '=', 'Quote Preparation')], limit=1)
-    #     stage_quote_completed = CrmStage.search([('name', '=', 'Quote Completed')], limit=1)
+        # Get required stages
+        stage_quote_preparation = CrmStage.search([('name', '=', 'Quote Preparation')], limit=1)
+        stage_quote_completed = CrmStage.search([('name', '=', 'Quote Completed')], limit=1)
+    
+        for order in self:
+    
+            # --- VALIDATIONS ---
+            if not order.opportunity_id:
+                raise ValidationError("This quotation is not linked to any opportunity.")
+    
+            if order.amount_total <= 0:
+                raise ValidationError("Expected revenue must be greater than 0 to mark as Quote Completed.")
+    
+            # --- MARK QUOTE COMPLETED FLAG ---
+            if not order.quote_completed:
+                order.quote_completed = True
+    
+            opportunity = order.opportunity_id
+    
+            # --- AUTO CRM STAGE UPDATE ---
+            if opportunity.stage_id.id == stage_quote_preparation.id:
+                opportunity.stage_id = stage_quote_completed.id
+    
+        return True
 
-    # for order in self:
-
-    #     # --- VALIDATIONS ---
-    #     if not order.opportunity_id:
-    #         raise ValidationError("This quotation is not linked to any opportunity.")
-
-    #     if order.amount_total <= 0:
-    #         raise ValidationError("Expected revenue must be greater than 0 to mark as Quote Completed.")
-
-    #     # --- MARK QUOTE COMPLETED FLAG ---
-    #     if not order.quote_completed:
-    #         order.quote_completed = True
-
-    #     opportunity = order.opportunity_id
-
-    #     # --- AUTO CRM STAGE UPDATE ---
-    #     if opportunity.stage_id.id == stage_quote_preparation.id:
-    #         opportunity.stage_id = stage_quote_completed.id
-
-    # return True
- 
 
 
 
@@ -93,6 +93,7 @@ class SaleOrder(models.Model):
                         order.opportunity_id.stage_id = stage.id
 
         return rec
+
 
 
 
